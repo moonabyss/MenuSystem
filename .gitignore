@@ -26,3 +26,6 @@ DerivedDataCache/*
 
 # Starter Content Ignored
 Content/StarterContent/*
+
+# Host specific data
+devops_data/*

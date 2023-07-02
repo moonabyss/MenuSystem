@@ -1,0 +1,30 @@
+BasedOnStyle: Microsoft
+IndentWidth: '4'
+UseTab: Never
+TabWidth: '4'
+#BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
+BraceWrapping:
+  SplitEmptyFunction: true
+  AfterClass: true
+  AfterCaseLabel: true
+  BeforeLambdaBody: true
+ColumnLimit: '140'
+AccessModifierOffset: '-4'
+SortIncludes: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: Inline
+IndentCaseLabels: true
+AlignAfterOpenBracket: DontAlign
+AllowAllArgumentsOnNextLine: true
+PointerAlignment: Left
+SpacesBeforeTrailingComments: 2
+AlignEscapedNewlines: Left
+SpaceAfterLogicalNot: false
+SpaceAfterCStyleCast: true
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeComma
+NamespaceIndentation: All
