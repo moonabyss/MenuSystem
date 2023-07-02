@@ -5,10 +5,11 @@ using System.Collections.Generic;
 
 public class MenuSystemTarget : TargetRules
 {
-	public MenuSystemTarget(TargetInfo Target) : base(Target)
-	{
-		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("MenuSystem");
-	}
+    public MenuSystemTarget(TargetInfo Target)
+        : base(Target)
+    {
+        Type = TargetType.Game;
+        DefaultBuildSettings = BuildSettingsVersion.V2;
+        ExtraModuleNames.Add("MenuSystem");
+    }
 }

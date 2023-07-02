@@ -28,3 +28,4 @@ SpaceAfterCStyleCast: true
 AlwaysBreakTemplateDeclarations: Yes
 BreakConstructorInitializers: BeforeComma
 NamespaceIndentation: All
+InsertNewlineAtEOF: true
