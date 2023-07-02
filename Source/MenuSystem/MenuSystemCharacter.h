@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/OnlineSessionInterface.h"
 
 #include "MenuSystemCharacter.generated.h"
 
@@ -62,4 +63,8 @@ public:
     FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
     /** Returns FollowCamera subobject **/
     FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+public:
+    // Pointer to the online session interface
+    IOnlineSessionPtr OnlineSessionInterface;
 };
