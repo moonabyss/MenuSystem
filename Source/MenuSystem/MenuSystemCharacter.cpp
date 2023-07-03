@@ -7,12 +7,16 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogMenuSystem, All, All);
 
 //////////////////////////////////////////////////////////////////////////
 // AMenuSystemCharacter
 
 AMenuSystemCharacter::AMenuSystemCharacter()
+    : CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete))
 {
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -52,15 +56,11 @@ AMenuSystemCharacter::AMenuSystemCharacter()
     // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
     // are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-    IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+    IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();  // Get Online Subsystem
     if (OnlineSubsystem)
     {
-        OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
-
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 20.0f, FColor::Blue, FString::Printf(TEXT("Found subsystem: %s"), *OnlineSubsystem->GetSubsystemName().ToString()));
-        }
+        OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();  // Get Online Session Interface
+        UE_LOG(LogMenuSystem, Display, TEXT("Found subsystem: %s"), *OnlineSubsystem->GetSubsystemName().ToString());
     }
 }
 
@@ -138,5 +138,42 @@ void AMenuSystemCharacter::MoveRight(float Value)
         const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
         // add movement in that direction
         AddMovementInput(Direction, Value);
+    }
+}
+
+void AMenuSystemCharacter::CreateGameSession()
+{
+    if (!( OnlineSessionInterface.IsValid() && GetWorld() )) return;
+
+    // Destroy existing session
+    auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
+    if (ExistingSession)
+    {
+        OnlineSessionInterface->DestroySession(NAME_GameSession);
+    }
+
+    // Bind delegate
+    OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+
+    TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
+    SessionSettings->bIsLANMatch = false;
+    SessionSettings->NumPublicConnections = 4;
+    SessionSettings->bAllowJoinInProgress = true;
+    // SessionSettings->bAllowJoinViaPresence = true;
+    SessionSettings->bShouldAdvertise = true;
+    // SessionSettings->bUsesPresence = true;
+    SessionSettings->bUseLobbiesIfAvailable = true;
+    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+    OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
+}
+
+void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) {
+    if (bWasSuccessful)
+    {
+        UE_LOG(LogMenuSystem, Display, TEXT("Session created: %s"), *SessionName.ToString());
+    }
+    else
+    {
+        UE_LOG(LogMenuSystem, Error, TEXT("Failed to create session"));
     }
 }
