@@ -17,6 +17,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogMenuSystem, All, All);
 
 AMenuSystemCharacter::AMenuSystemCharacter()
     : CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete))
+    , FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete))
 {
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -143,7 +144,7 @@ void AMenuSystemCharacter::MoveRight(float Value)
 
 void AMenuSystemCharacter::CreateGameSession()
 {
-    if (!( OnlineSessionInterface.IsValid() && GetWorld() )) return;
+    if (!(OnlineSessionInterface.IsValid() && GetWorld())) return;
 
     // Destroy existing session
     auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
@@ -159,15 +160,17 @@ void AMenuSystemCharacter::CreateGameSession()
     SessionSettings->bIsLANMatch = false;
     SessionSettings->NumPublicConnections = 4;
     SessionSettings->bAllowJoinInProgress = true;
-    // SessionSettings->bAllowJoinViaPresence = true;
+    SessionSettings->bAllowJoinViaPresence = true;
     SessionSettings->bShouldAdvertise = true;
-    // SessionSettings->bUsesPresence = true;
+    SessionSettings->bUsesPresence = true;
     SessionSettings->bUseLobbiesIfAvailable = true;
+
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
     OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
 }
 
-void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) {
+void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+{
     if (bWasSuccessful)
     {
         UE_LOG(LogMenuSystem, Display, TEXT("Session created: %s"), *SessionName.ToString());
@@ -175,5 +178,32 @@ void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasS
     else
     {
         UE_LOG(LogMenuSystem, Error, TEXT("Failed to create session"));
+    }
+}
+
+void AMenuSystemCharacter::JoinGameSession()
+{
+    // Find game sessions
+    if (!( OnlineSessionInterface.IsValid() && GetWorld() )) return;
+
+    OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+
+    SessionSearch = MakeShareable(new FOnlineSessionSearch());
+    SessionSearch->MaxSearchResults = 10000;
+    SessionSearch->bIsLanQuery = false;
+    //SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+    SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+
+    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+    OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
+}
+
+void AMenuSystemCharacter::OnFindSessionsComplete(bool bWasSuccessful) 
+{
+    for (auto Result : SessionSearch->SearchResults)
+    {
+        auto Id = Result.GetSessionIdStr();
+        auto User = Result.Session.OwningUserName;
+        UE_LOG(LogMenuSystem, Display, TEXT("ID: %s, User: %s"), *Id, *User);
     }
 }
