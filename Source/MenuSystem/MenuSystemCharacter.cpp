@@ -12,6 +12,8 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogMenuSystem, All, All);
 
+const FString SearchServerKeyword = FString("MoonabyssGame");
+
 //////////////////////////////////////////////////////////////////////////
 // AMenuSystemCharacter
 
@@ -156,18 +158,19 @@ void AMenuSystemCharacter::CreateGameSession()
     // Bind delegate
     OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
-    TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
+    FOnlineSessionSettings SessionSettings = FOnlineSessionSettings{};
     // Create session through presence
-    SessionSettings->bIsLANMatch = false;
-    SessionSettings->NumPublicConnections = 4;
-    SessionSettings->bAllowJoinInProgress = true;
-    SessionSettings->bAllowJoinViaPresence = true;
-    SessionSettings->bShouldAdvertise = true;
-    SessionSettings->bUsesPresence = true;
-    SessionSettings->bUseLobbiesIfAvailable = true;
+    SessionSettings.bIsLANMatch = false;
+    SessionSettings.NumPublicConnections = 4;
+    SessionSettings.bAllowJoinInProgress = true;
+    SessionSettings.bAllowJoinViaPresence = true;
+    SessionSettings.bShouldAdvertise = true;
+    SessionSettings.bUsesPresence = true;
+    SessionSettings.bUseLobbiesIfAvailable = true;
+    SessionSettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+    // TODO: Set server name
 
-    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-    OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
+    OnlineSessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
 }
 
 void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -193,9 +196,9 @@ void AMenuSystemCharacter::JoinGameSession()
     SessionSearch->MaxSearchResults = 10000;
     SessionSearch->bIsLanQuery = false;
     SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+    SessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineComparisonOp::Equals);
 
-    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-    OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
+    OnlineSessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 }
 
 void AMenuSystemCharacter::OnFindSessionsComplete(bool bWasSuccessful) 
