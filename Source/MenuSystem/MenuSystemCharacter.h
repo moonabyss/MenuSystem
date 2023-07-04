@@ -29,6 +29,8 @@ public:
     float TurnRateGamepad;
 
 protected:
+    void BeginPlay() override;
+
     /** Called for forwards/backward input */
     void MoveForward(float Value);
 
@@ -77,10 +79,12 @@ protected:
 
     void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
     void OnFindSessionsComplete(bool bWasSuccessful);
+    void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 
 private:
     FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
     FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
+    FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 
     TSharedPtr<FOnlineSessionSearch> SessionSearch;
 };

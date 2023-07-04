@@ -20,6 +20,7 @@ const FString SearchServerKeyword = FString("MoonabyssGame");
 AMenuSystemCharacter::AMenuSystemCharacter()
     : CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete))
     , FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete))
+    , JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete))
 {
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -65,6 +66,11 @@ AMenuSystemCharacter::AMenuSystemCharacter()
         OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();  // Get Online Session Interface
         UE_LOG(LogMenuSystem, Display, TEXT("Found subsystem: %s"), *OnlineSubsystem->GetSubsystemName().ToString());
     }
+}
+
+void AMenuSystemCharacter::BeginPlay()
+{
+    check(GetWorld());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -146,7 +152,7 @@ void AMenuSystemCharacter::MoveRight(float Value)
 
 void AMenuSystemCharacter::CreateGameSession()
 {
-    if (!(OnlineSessionInterface.IsValid() && GetWorld())) return;
+    if (!OnlineSessionInterface.IsValid()) return;
 
     // Destroy existing session
     auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
@@ -167,10 +173,12 @@ void AMenuSystemCharacter::CreateGameSession()
     SessionSettings.bShouldAdvertise = true;
     SessionSettings.bUsesPresence = true;
     SessionSettings.bUseLobbiesIfAvailable = true;
+    SessionSettings.Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
     SessionSettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
     // TODO: Set server name
 
-    OnlineSessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
+    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+    OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SessionSettings);
 }
 
 void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -178,6 +186,8 @@ void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasS
     if (bWasSuccessful)
     {
         UE_LOG(LogMenuSystem, Display, TEXT("Session created: %s"), *SessionName.ToString());
+
+        GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
     }
     else
     {
@@ -188,7 +198,7 @@ void AMenuSystemCharacter::OnCreateSessionComplete(FName SessionName, bool bWasS
 void AMenuSystemCharacter::JoinGameSession()
 {
     // Find game sessions
-    if (!( OnlineSessionInterface.IsValid() && GetWorld() )) return;
+    if (!OnlineSessionInterface.IsValid()) return;
 
     OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 
@@ -198,15 +208,45 @@ void AMenuSystemCharacter::JoinGameSession()
     SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
     SessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineComparisonOp::Equals);
 
-    OnlineSessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+    OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
 }
 
-void AMenuSystemCharacter::OnFindSessionsComplete(bool bWasSuccessful) 
+void AMenuSystemCharacter::OnFindSessionsComplete(bool bWasSuccessful)
 {
+    if (!OnlineSessionInterface.IsValid()) return;
+
     for (auto Result : SessionSearch->SearchResults)
     {
         auto Id = Result.GetSessionIdStr();
         auto User = Result.Session.OwningUserName;
-        UE_LOG(LogMenuSystem, Display, TEXT("ID: %s, User: %s"), *Id, *User);
+        FString MatchType;
+        Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+        if (MatchType == FString("FreeForAll"))
+        {
+            UE_LOG(LogMenuSystem, Display, TEXT("ID: %s, User: %s, MatchType: %s"), *Id, *User, *MatchType);
+
+            OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+            const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+            OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);
+        }
+    }
+}
+
+void AMenuSystemCharacter::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+{
+    if (!OnlineSessionInterface.IsValid() || Result != EOnJoinSessionCompleteResult::Success) return;
+
+    FString Address;
+    if (OnlineSessionInterface->GetResolvedConnectString(SessionName, Address))
+    {
+        UE_LOG(LogMenuSystem, Display, TEXT("Connect string: %s"), * Address);
+
+        APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
+        if (PC)
+        {
+            PC->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+        }
     }
 }
