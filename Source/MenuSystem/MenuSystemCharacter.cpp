@@ -157,6 +157,7 @@ void AMenuSystemCharacter::CreateGameSession()
     OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
     TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
+    // Create session through presence
     SessionSettings->bIsLANMatch = false;
     SessionSettings->NumPublicConnections = 4;
     SessionSettings->bAllowJoinInProgress = true;
@@ -191,8 +192,7 @@ void AMenuSystemCharacter::JoinGameSession()
     SessionSearch = MakeShareable(new FOnlineSessionSearch());
     SessionSearch->MaxSearchResults = 10000;
     SessionSearch->bIsLanQuery = false;
-    //SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
-    SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+    SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
     OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
