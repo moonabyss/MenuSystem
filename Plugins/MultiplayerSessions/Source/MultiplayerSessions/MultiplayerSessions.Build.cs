@@ -18,7 +18,9 @@ public class MultiplayerSessions : ModuleRules
         });
 
         PublicDependencyModuleNames.AddRange(new string[] {
-            "Core", "OnlineSubsystem", "OnlineSubsystemSteam",
+            "Core",                  //
+            "OnlineSubsystem",       //
+            "OnlineSubsystemSteam",  //
             // ... add other public dependencies that you statically link with here ...
         });
 
