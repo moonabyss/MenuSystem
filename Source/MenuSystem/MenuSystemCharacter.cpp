@@ -70,6 +70,8 @@ AMenuSystemCharacter::AMenuSystemCharacter()
 
 void AMenuSystemCharacter::BeginPlay()
 {
+    Super::BeginPlay();
+
     check(GetWorld());
 }
 
