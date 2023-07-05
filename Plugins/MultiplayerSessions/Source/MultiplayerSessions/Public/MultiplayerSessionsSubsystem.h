@@ -8,6 +8,8 @@
 
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+class FOnlineSessionSettings;
+
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
@@ -38,6 +40,10 @@ protected:
 
 private:
     IOnlineSessionPtr SessionInterface;
+    TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
+
+    const FName MenuSessionName = FName("MoonabyssGameSession");
+    const FString SearchServerKeyword = FString("MoonabyssGame");
 
     /**
      * To add to the Online Session Interface delegate list.
