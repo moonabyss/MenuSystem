@@ -241,7 +241,7 @@ void AMenuSystemCharacter::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
     FString Address;
     if (OnlineSessionInterface->GetResolvedConnectString(SessionName, Address))
     {
-        UE_LOG(LogMenuSystem, Display, TEXT("Connect string: %s"), * Address);
+        UE_LOG(LogMenuSystem, Display, TEXT("Connect string: %s"), *Address);
 
         APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
         if (PC)
