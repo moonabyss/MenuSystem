@@ -34,7 +34,7 @@ public:
      */
     void SetupSession(const int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath);
     void CreateSession();
-    void FindSessions(int32 MaxSearchResults);
+    void FindSessions(int32 MaxSearchResults = 10);
     void JoinSession(const FOnlineSessionSearchResult& SessionResult);
     void DestroySession();
     void StartSession();
@@ -62,6 +62,7 @@ protected:
 private:
     IOnlineSessionPtr SessionInterface;
     TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
+    TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
     const FName MenuSessionName = FName("MoonabyssGameSession");
     const FString SearchServerKeyword = FString("MoonabyssGame");

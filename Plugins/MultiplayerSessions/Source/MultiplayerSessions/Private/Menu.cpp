@@ -39,7 +39,12 @@ void UMenu::HostButtonClicked()
     MultiplayerSessionsSubsystem->CreateSession();
 }
 
-void UMenu::JoinButtonClicked() {}
+void UMenu::JoinButtonClicked()
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    MultiplayerSessionsSubsystem->FindSessions();
+}
 
 void UMenu::MenuShow()
 {

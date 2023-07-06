@@ -41,7 +41,7 @@ void UMultiplayerSessionsSubsystem::CreateSession()
 
     // session settings
     LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
-    const bool IsSubsystemNull = *IOnlineSubsystem::Get()->GetSubsystemName().ToString().ToLower() == FString("null");
+    const bool IsSubsystemNull = IOnlineSubsystem::Get()->GetSubsystemName() == FName("NULL");
     LastSessionSettings->bIsLANMatch = IsSubsystemNull;
     LastSessionSettings->NumPublicConnections = NumPublicConnections;
     LastSessionSettings->bAllowJoinInProgress = true;
@@ -65,7 +65,32 @@ void UMultiplayerSessionsSubsystem::CreateSession()
     }
 }
 
-void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults) {}
+void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
+{
+    if (!SessionInterface.IsValid()) return;
+
+    // Store the delegate
+    FindSessionsCompleteDelegate_Handle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+
+    LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
+    LastSessionSearch->MaxSearchResults = MaxSearchResults;
+    const bool IsSubsystemNull = IOnlineSubsystem::Get()->GetSubsystemName() == FName("NULL");
+    LastSessionSearch->bIsLanQuery = IsSubsystemNull;
+    LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+    LastSessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineComparisonOp::Equals);
+    // TODO: Set server name
+
+    // try to find sessions
+    const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+    if (!SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))
+    {
+        // if not successful, remove from stored delegates list
+        SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
+
+        // broadcast custom delegate
+        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+    }
+}
 
 void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionResult) {}
 
@@ -91,7 +116,17 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
     }
 }
 
-void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful) {}
+void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
+{
+    // broadcast custom delegate
+    MultiplayerFindSessionsCompleteDelegate.Broadcast(LastSessionSearch->SearchResults, bWasSuccessful);
+
+    if (SessionInterface)
+    {
+        // remove from stored delegates list
+        SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
+    }
+}
 
 void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result) {}
 
