@@ -8,15 +8,22 @@
 
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+struct FMultiplayerSessionSettings
+{
+    int32 NumPublicConnections;
+    FString MatchType;
+    FString LobbyMap;
+};
+
 /**
  * Declaring our own custom delegates for the Menu class to bind callbacks to
  */
 // clang-format off
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerCreateSessionCompleteDelegate, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerFindSessionsCompleteDelegate, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerJoinSessionCompleteDelegate, EOnJoinSessionCompleteResult::Type Result);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerDestroySessionCompleteDelegate, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerJoinSessionCompleteDelegate, EOnJoinSessionCompleteResult::Type Result, const FString& Address);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerStartSessionCompleteDelegate, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerDestroySessionCompleteDelegate, bool bWasSuccessful);
 // clang-format on
 
 class FOnlineSessionSettings;
@@ -67,9 +74,7 @@ private:
     const FName MenuSessionName = FName("MoonabyssGameSession");
     const FString SearchServerKeyword = FString("MoonabyssGame");
 
-    int32 NumPublicConnections;
-    FString MatchType;
-    FString LobbyMap;
+    FMultiplayerSessionSettings MultiplayerSessionSettings{};
 
     /**
      * To add to the Online Session Interface delegate list.

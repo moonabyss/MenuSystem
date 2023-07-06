@@ -3,6 +3,7 @@
 #include "Menu.h"
 #include "Components/Button.h"
 #include "MultiplayerSessionsSubsystem.h"
+#include "OnlineSessionSettings.h"
 
 bool UMenu::Initialize()
 {
@@ -36,6 +37,7 @@ void UMenu::HostButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
 
+    MultiplayerSessionsSubsystem->MultiplayerCreateSessionCompleteDelegate.AddUObject(this, &ThisClass::OnCreateSession);
     MultiplayerSessionsSubsystem->CreateSession();
 }
 
@@ -43,6 +45,7 @@ void UMenu::JoinButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
 
+    MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.AddUObject(this, &ThisClass::OnFindSessions);
     MultiplayerSessionsSubsystem->FindSessions();
 }
 
@@ -80,4 +83,59 @@ void UMenu::MenuTeardown()
     }
 }
 
-void UMenu::OnCreateSession(bool bWasSussessful) {}
+void UMenu::OnCreateSession(bool bWasSussessful)
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    // Clear bindings
+    MultiplayerSessionsSubsystem->MultiplayerCreateSessionCompleteDelegate.RemoveAll(this);
+}
+
+void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    // Clear bindings
+    MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.RemoveAll(this);
+
+    // Join session
+    MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.AddUObject(this, &ThisClass::OnJoinSession);
+    if (bWasSuccessful && SessionResults.Num() == 1)
+    {
+        MultiplayerSessionsSubsystem->JoinSession(SessionResults[0]);
+    }
+}
+
+void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result, const FString& Address)
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    // Clear bindings
+    MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.RemoveAll(this);
+
+    MultiplayerSessionsSubsystem->MultiplayerStartSessionCompleteDelegate.AddUObject(this, &ThisClass::OnStartSession);
+
+    APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
+    if (PC)
+    {
+        PC->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+    }
+}
+
+void UMenu::OnStartSession(bool bWasSuccessful)
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    // Clear bindings
+    MultiplayerSessionsSubsystem->MultiplayerStartSessionCompleteDelegate.RemoveAll(this);
+
+    MultiplayerSessionsSubsystem->MultiplayerStartSessionCompleteDelegate.AddUObject(this, &ThisClass::OnDestroySession);
+}
+
+void UMenu::OnDestroySession(bool bWasSuccessful)
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    // Clear bindings
+    MultiplayerSessionsSubsystem->MultiplayerDestroySessionCompleteDelegate.RemoveAll(this);
+}
