@@ -20,13 +20,30 @@ void UMenu::NativeDestruct()
     Super::NativeDestruct();
 }
 
-void UMenu::MenuSetup(const int32 NumberOfPublicConnections, const FString& TypeOfMatch)
+void UMenu::MenuSetup(const int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath)
 {
-    check(GetWorld());
     check(GetGameInstance());
 
-    NumPublicConnections = NumberOfPublicConnections;
-    MatchType = TypeOfMatch;
+    MultiplayerSessionsSubsystem = GetGameInstance()->GetSubsystem<UMultiplayerSessionsSubsystem>();
+    if (MultiplayerSessionsSubsystem)
+    {
+        MultiplayerSessionsSubsystem->SetupSession(NumberOfPublicConnections, TypeOfMatch, LobyMapPath);
+        MenuShow();
+    }
+}
+
+void UMenu::HostButtonClicked()
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    MultiplayerSessionsSubsystem->CreateSession();
+}
+
+void UMenu::JoinButtonClicked() {}
+
+void UMenu::MenuShow()
+{
+    check(GetWorld());
 
     AddToViewport();
     SetVisibility(ESlateVisibility::Visible);
@@ -41,18 +58,7 @@ void UMenu::MenuSetup(const int32 NumberOfPublicConnections, const FString& Type
         PC->SetInputMode(InputModeData);
         PC->SetShowMouseCursor(true);
     }
-
-    MultiplayerSessionsSubsystem = GetGameInstance()->GetSubsystem<UMultiplayerSessionsSubsystem>();
 }
-
-void UMenu::HostButtonClicked()
-{
-    if (!MultiplayerSessionsSubsystem) return;
-
-    MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
-}
-
-void UMenu::JoinButtonClicked() {}
 
 void UMenu::MenuTeardown()
 {
@@ -68,3 +74,5 @@ void UMenu::MenuTeardown()
         PC->SetShowMouseCursor(false);
     }
 }
+
+void UMenu::OnCreateSession(bool bWasSussessful) {}

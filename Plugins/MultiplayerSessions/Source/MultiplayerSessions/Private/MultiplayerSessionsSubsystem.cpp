@@ -18,7 +18,15 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem()
     }
 }
 
-void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FString& MatchType)
+void UMultiplayerSessionsSubsystem::SetupSession(
+    const int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath)
+{
+    NumPublicConnections = NumberOfPublicConnections;
+    MatchType = TypeOfMatch;
+    LobbyMap = LobyMapPath;
+}
+
+void UMultiplayerSessionsSubsystem::CreateSession()
 {
     if (!SessionInterface.IsValid()) return;
 
@@ -51,6 +59,9 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, co
     {
         // if not successful, remove from stored delegates list
         SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate_Handle);
+
+        // broadcast custom delegate
+        MultiplayerCreateSessionCompleteDelegate.Broadcast(false);
     }
 }
 
@@ -64,7 +75,20 @@ void UMultiplayerSessionsSubsystem::StartSession() {}
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
+    // broadcast custom delegate
+    MultiplayerCreateSessionCompleteDelegate.Broadcast(bWasSuccessful);
+
+    if (SessionInterface)
+    {
+        // remove from stored delegates list
+        SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate_Handle);
+    }
+
+    if (bWasSuccessful && GetWorld())
+    {
+        // Travel to Lobby Map
+        GetWorld()->ServerTravel(LobbyMap.Append("?listen"));
+    }
 }
 
 void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful) {}

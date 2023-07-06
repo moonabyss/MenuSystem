@@ -17,11 +17,19 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 
 public:
     UFUNCTION(BlueprintCallable)
-    void MenuSetup(const int32 NumberOfPublicConnections = 4, const FString& TypeOfMatch = FString("FreeForAll"));
+    void MenuSetup(                                          //
+        const int32 NumberOfPublicConnections = 4,           //
+        const FString& TypeOfMatch = FString("FreeForAll"),  //
+        const FString& LobyMapPath = FString("/Game/ThirdPerson/Maps/Lobby"));
 
 protected:
     bool Initialize() override;
     void NativeDestruct() override;
+
+    /**
+     * Callbacks for the custom delegates on the MultiplayerSessionSubsystem
+     */
+    virtual void OnCreateSession(bool bWasSussessful);
 
 private:
     UPROPERTY(meta = (BindWidget))
@@ -39,8 +47,6 @@ private:
     // The subsystem designed to handle all online session functionality
     UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
+    void MenuShow();
     void MenuTeardown();
-
-    int32 NumPublicConnections;
-    FString MatchType;
 };

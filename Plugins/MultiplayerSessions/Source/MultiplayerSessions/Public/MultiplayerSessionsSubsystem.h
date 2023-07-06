@@ -8,6 +8,11 @@
 
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+/**
+ * Declaring our own custom delegates for the Menu class to bind callbacks to
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMultiplayerCreateSessionCompleteDelegate, bool, bWasSuccessful);
+
 class FOnlineSessionSettings;
 
 UCLASS()
@@ -21,11 +26,17 @@ public:
     /**
      * To handle session functionality. The Menu class will call this.
      */
-    void CreateSession(int32 NumPublicConnections, const FString& MatchType);
+    void SetupSession(const int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath);
+    void CreateSession();
     void FindSessions(int32 MaxSearchResults);
     void JoinSession(const FOnlineSessionSearchResult& SessionResult);
     void DestroySession();
     void StartSession();
+
+    /**
+     * Our own custom delegates for the Menu class to bind callbacks to
+     */
+    FOnMultiplayerCreateSessionCompleteDelegate MultiplayerCreateSessionCompleteDelegate;
 
 protected:
     /**
@@ -44,6 +55,10 @@ private:
 
     const FName MenuSessionName = FName("MoonabyssGameSession");
     const FString SearchServerKeyword = FString("MoonabyssGame");
+
+    int32 NumPublicConnections;
+    FString MatchType;
+    FString LobbyMap;
 
     /**
      * To add to the Online Session Interface delegate list.
