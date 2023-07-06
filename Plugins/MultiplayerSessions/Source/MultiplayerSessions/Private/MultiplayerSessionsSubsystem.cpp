@@ -1,8 +1,8 @@
 // Multiplayer Sessions plugin. All rights reserved
 
 #include "MultiplayerSessionsSubsystem.h"
-#include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
+#include "OnlineSubsystem.h"
 
 UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem()
     : CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete))
@@ -18,7 +18,7 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem()
     }
 }
 
-void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString MatchType)
+void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FString& MatchType)
 {
     if (!SessionInterface.IsValid()) return;
 
@@ -28,12 +28,14 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
         SessionInterface->DestroySession(MenuSessionName, DestroySessionCompleteDelegate);
     }
 
+    // Store the delegate
     CreateSessionCompleteDelegate_Handle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
+    // session settings
     LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
     const bool IsSubsystemNull = *IOnlineSubsystem::Get()->GetSubsystemName().ToString().ToLower() == FString("null");
     LastSessionSettings->bIsLANMatch = IsSubsystemNull;
-    LastSessionSettings->NumPublicConnections =NumPublicConnections;
+    LastSessionSettings->NumPublicConnections = NumPublicConnections;
     LastSessionSettings->bAllowJoinInProgress = true;
     LastSessionSettings->bAllowJoinViaPresence = true;
     LastSessionSettings->bUsesPresence = true;
@@ -44,8 +46,10 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
     // TODO: Set server name
 
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+    // Try to create session
     if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, *LastSessionSettings))
     {
+        // if not successful, remove from stored delegates list
         SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate_Handle);
     }
 }
@@ -58,7 +62,10 @@ void UMultiplayerSessionsSubsystem::DestroySession() {}
 
 void UMultiplayerSessionsSubsystem::StartSession() {}
 
-void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) {}
+void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+{
+    GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
+}
 
 void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful) {}
 
