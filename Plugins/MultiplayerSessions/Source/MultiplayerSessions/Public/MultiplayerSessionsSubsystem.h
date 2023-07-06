@@ -11,7 +11,13 @@
 /**
  * Declaring our own custom delegates for the Menu class to bind callbacks to
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMultiplayerCreateSessionCompleteDelegate, bool, bWasSuccessful);
+// clang-format off
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerCreateSessionCompleteDelegate, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerFindSessionsCompleteDelegate, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerJoinSessionCompleteDelegate, EOnJoinSessionCompleteResult::Type Result);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerDestroySessionCompleteDelegate, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerStartSessionCompleteDelegate, bool bWasSuccessful);
+// clang-format on
 
 class FOnlineSessionSettings;
 
@@ -37,6 +43,10 @@ public:
      * Our own custom delegates for the Menu class to bind callbacks to
      */
     FOnMultiplayerCreateSessionCompleteDelegate MultiplayerCreateSessionCompleteDelegate;
+    FOnMultiplayerFindSessionsCompleteDelegate MultiplayerFindSessionsCompleteDelegate;
+    FOnMultiplayerJoinSessionCompleteDelegate MultiplayerJoinSessionCompleteDelegate;
+    FOnMultiplayerDestroySessionCompleteDelegate MultiplayerDestroySessionCompleteDelegate;
+    FOnMultiplayerStartSessionCompleteDelegate MultiplayerStartSessionCompleteDelegate;
 
 protected:
     /**
