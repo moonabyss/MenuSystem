@@ -14,13 +14,20 @@ struct FMultiplayerSessionSettings
     FString MatchType;
     FString LobbyMap;
 };
+USTRUCT()
+struct FServerData
+{
+    GENERATED_BODY()
+
+    FString ServerName;
+};
 
 /**
  * Declaring our own custom delegates for the Menu class to bind callbacks to
  */
 // clang-format off
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerCreateSessionCompleteDelegate, bool bWasSuccessful);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerFindSessionsCompleteDelegate, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerFindSessionsCompleteDelegate, const TArray<FServerData>& SearchResults, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerJoinSessionCompleteDelegate, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerStartSessionCompleteDelegate, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerDestroySessionCompleteDelegate, bool bWasSuccessful);
@@ -39,10 +46,10 @@ public:
     /**
      * To handle session functionality. The Menu class will call this.
      */
-    void SetupSession(const int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath);
+    void SetupSession(int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath);
     void CreateSession();
     void FindSessions(int32 MaxSearchResults = 10);
-    void JoinSession(const FOnlineSessionSearchResult& SessionResult);
+    void JoinSession(int32 Index);
     void DestroySession();
     void StartSession();
 

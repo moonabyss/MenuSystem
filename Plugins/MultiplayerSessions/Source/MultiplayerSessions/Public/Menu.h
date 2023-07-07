@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CoreMinimal.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "MultiplayerSessionsSubsystem.h"
 
 #include "Menu.generated.h"
 
@@ -31,7 +32,7 @@ protected:
      * Callbacks for the custom delegates on the MultiplayerSessionSubsystem
      */
     virtual void OnCreateSession(bool bWasSussessful);
-    virtual void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
+    virtual void OnFindSessions(const TArray<FServerData>& SearchResults, bool bWasSuccessful);
     virtual void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
     virtual void OnStartSession(bool bWasSuccessful);
     virtual void OnDestroySession(bool bWasSuccessful);

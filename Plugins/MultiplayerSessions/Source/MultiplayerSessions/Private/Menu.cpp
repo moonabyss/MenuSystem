@@ -2,7 +2,6 @@
 
 #include "Menu.h"
 #include "Components/Button.h"
-#include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 
 bool UMenu::Initialize()
@@ -103,18 +102,23 @@ void UMenu::OnCreateSession(bool bWasSussessful)
     }
 }
 
-void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
+void UMenu::OnFindSessions(const TArray<FServerData>& SearchResults, bool bWasSuccessful)
 {
     if (!MultiplayerSessionsSubsystem) return;
 
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.RemoveAll(this);
 
+    for (const auto& Result : SearchResults)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *Result.ServerName));
+    }
+
     // Join session
     MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.AddUObject(this, &ThisClass::OnJoinSession);
-    if (bWasSuccessful && SessionResults.Num() == 1)
+    if (bWasSuccessful && SearchResults.Num() == 1)
     {
-        MultiplayerSessionsSubsystem->JoinSession(SessionResults[0]);
+        MultiplayerSessionsSubsystem->JoinSession(0);
     }
     else
     {

@@ -20,8 +20,7 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem()
     }
 }
 
-void UMultiplayerSessionsSubsystem::SetupSession(
-    const int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath)
+void UMultiplayerSessionsSubsystem::SetupSession(int32 NumberOfPublicConnections, const FString& TypeOfMatch, const FString& LobyMapPath)
 {
 #if !UE_BUILD_SHIPPING
     UE_LOG(LogMultiplayerSubsystem, Display, TEXT("SetupSession()"));
@@ -91,7 +90,7 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 
     if (!SessionInterface.IsValid())
     {
-        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FServerData>(), false);
         return;
     }
 
@@ -114,11 +113,11 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
         SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
 
         // broadcast custom delegate
-        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FServerData>(), false);
     }
 }
 
-void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionResult)
+void UMultiplayerSessionsSubsystem::JoinSession(int32 Index)
 {
 #if !UE_BUILD_SHIPPING
     UE_LOG(LogMultiplayerSubsystem, Display, TEXT("JoinSession()"));
@@ -135,7 +134,7 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
 
     // try to join session
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-    if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, SessionResult))
+    if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, LastSessionSearch->SearchResults[Index]))
     {
         // if not successful, remove from stored delegates list
         SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate_Handle);
@@ -218,7 +217,7 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
     if (!SessionInterface)
     {
         // broadcast custom delegate
-        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+        MultiplayerFindSessionsCompleteDelegate.Broadcast(TArray<FServerData>(), false);
         return;
     }
 
@@ -226,13 +225,13 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
     SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
 
     // Filter results by MatchType
-    TArray<FOnlineSessionSearchResult> FilteredResults = LastSessionSearch->SearchResults.FilterByPredicate(
+    /*TArray<FOnlineSessionSearchResult> FilteredResults = LastSessionSearch->SearchResults.FilterByPredicate(
         [&](const FOnlineSessionSearchResult& Result)
         {
             FString MatchType;
             Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
             return MatchType == MultiplayerSessionSettings.MatchType;
-        });
+        });*/
 
     /*
     FServerData Data;
@@ -251,8 +250,24 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
     ServerNames.Add(Data);
     */
 
+    TArray<FServerData> ServerList;
+    for (const auto& SearchResult : LastSessionSearch->SearchResults)
+    {
+        FServerData Data;
+        FString ServerName;
+        if (SearchResult.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, ServerName) && !ServerName.Equals(""))
+        {
+            Data.ServerName = ServerName;
+        }
+        else
+        {
+            Data.ServerName = SearchResult.GetSessionIdStr();
+        }
+        ServerList.Add(Data);
+    }
+
     // broadcast custom delegate
-    MultiplayerFindSessionsCompleteDelegate.Broadcast(FilteredResults, bWasSuccessful);
+    MultiplayerFindSessionsCompleteDelegate.Broadcast(ServerList, bWasSuccessful);
 }
 
 void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
