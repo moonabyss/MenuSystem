@@ -9,6 +9,9 @@ bool UMenu::Initialize()
 {
     if (!Super::Initialize()) return false;
 
+    if (!ensure(HostButton)) return false;
+    if (!ensure(JoinButton)) return false;
+
     HostButton->OnClicked.AddDynamic(this, &ThisClass::HostButtonClicked);
     JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
 

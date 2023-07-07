@@ -73,6 +73,7 @@ private:
 
     const FName MenuSessionName = FName("MoonabyssGameSession");
     const FString SearchServerKeyword = FString("MoonabyssGame");
+    const FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
     FMultiplayerSessionSettings MultiplayerSessionSettings{};
 

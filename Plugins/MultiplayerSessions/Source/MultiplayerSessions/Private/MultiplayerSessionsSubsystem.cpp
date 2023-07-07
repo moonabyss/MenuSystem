@@ -44,6 +44,7 @@ void UMultiplayerSessionsSubsystem::CreateSession()
         return;
     }
 
+    // Destroy existing session
     auto ExistingSession = SessionInterface->GetNamedSession(MenuSessionName);
     if (ExistingSession)
     {
@@ -52,7 +53,6 @@ void UMultiplayerSessionsSubsystem::CreateSession()
 
     // Store the delegate
     CreateSessionCompleteDelegate_Handle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
-    StartSessionCompleteDelegate_Handle = SessionInterface->AddOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegate);
 
     // session settings
     LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
@@ -67,7 +67,7 @@ void UMultiplayerSessionsSubsystem::CreateSession()
     LastSessionSettings->Set(
         FName("MatchType"), MultiplayerSessionSettings.MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
     LastSessionSettings->Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-    // TODO: Set server name
+    // LastSessionSettings->Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
     // Try to create session
@@ -231,6 +231,23 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
             Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
             return MatchType == MultiplayerSessionSettings.MatchType;
         });
+
+    /*
+    FServerData Data;
+    Data.MaxPlayers = SearchResult.Session.SessionSettings.NumPublicConnections;
+    Data.CurrentPlayers = Data.MaxPlayers - SearchResult.Session.NumOpenPublicConnections;
+    Data.HostUserName = SearchResult.Session.OwningUserName;
+    FString ServerName;
+    if (SearchResult.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, ServerName) && !ServerName.Equals(""))
+    {
+        Data.Name = ServerName;
+    }
+    else
+    {
+        Data.Name = SearchResult.GetSessionIdStr();
+    }
+    ServerNames.Add(Data);
+    */
 
     // broadcast custom delegate
     MultiplayerFindSessionsCompleteDelegate.Broadcast(FilteredResults, bWasSuccessful);
