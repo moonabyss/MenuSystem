@@ -54,4 +54,5 @@ private:
 
     void MenuShow();
     void MenuTeardown();
+    void SetButtonsEnabled(bool bIsButtonEnabled);
 };

@@ -48,7 +48,9 @@ void UMultiplayerSessionsSubsystem::CreateSession()
     auto ExistingSession = SessionInterface->GetNamedSession(MenuSessionName);
     if (ExistingSession)
     {
-        DestroySession(MenuSessionName);
+        bCreateSessionOnDestroy = true;
+        DestroySession();
+        return;
     }
 
     // Store the delegate
@@ -143,7 +145,7 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
     }
 }
 
-void UMultiplayerSessionsSubsystem::DestroySession(FName SessionName)
+void UMultiplayerSessionsSubsystem::DestroySession()
 {
 #if !UE_BUILD_SHIPPING
     UE_LOG(LogMultiplayerSubsystem, Display, TEXT("DestroySession()"));
@@ -158,7 +160,7 @@ void UMultiplayerSessionsSubsystem::DestroySession(FName SessionName)
     // Store the delegate
     DestroySessionCompleteDelegate_Handle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
 
-    if (!SessionInterface->DestroySession(SessionName))
+    if (!SessionInterface->DestroySession(MenuSessionName))
     {
         // if not successful, remove from stored delegates list
         SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate_Handle);
@@ -300,6 +302,12 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 
     // broadcast custom delegate
     MultiplayerDestroySessionCompleteDelegate.Broadcast(bWasSuccessful);
+
+    if (bWasSuccessful && bCreateSessionOnDestroy)
+    {
+        bCreateSessionOnDestroy = false;
+        CreateSession();
+    }
 }
 
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)

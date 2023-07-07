@@ -40,6 +40,8 @@ void UMenu::HostButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
 
+    SetButtonsEnabled(false);
+
     MultiplayerSessionsSubsystem->MultiplayerCreateSessionCompleteDelegate.AddUObject(this, &ThisClass::OnCreateSession);
     MultiplayerSessionsSubsystem->CreateSession();
 }
@@ -47,6 +49,8 @@ void UMenu::HostButtonClicked()
 void UMenu::JoinButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
+
+    SetButtonsEnabled(false);
 
     MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.AddUObject(this, &ThisClass::OnFindSessions);
     MultiplayerSessionsSubsystem->FindSessions();
@@ -92,6 +96,11 @@ void UMenu::OnCreateSession(bool bWasSussessful)
 
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerCreateSessionCompleteDelegate.RemoveAll(this);
+
+    if (!bWasSussessful)
+    {
+        SetButtonsEnabled(true);
+    }
 }
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
@@ -107,6 +116,10 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
     {
         MultiplayerSessionsSubsystem->JoinSession(SessionResults[0]);
     }
+    else
+    {
+        SetButtonsEnabled(true);
+    }
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -115,6 +128,11 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.RemoveAll(this);
+
+    if (Result != EOnJoinSessionCompleteResult::Success)
+    {
+        SetButtonsEnabled(true);
+    }
 }
 
 void UMenu::OnStartSession(bool bWasSuccessful)
@@ -123,8 +141,6 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerStartSessionCompleteDelegate.RemoveAll(this);
-
-    MultiplayerSessionsSubsystem->MultiplayerStartSessionCompleteDelegate.AddUObject(this, &ThisClass::OnDestroySession);
 }
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
@@ -133,4 +149,10 @@ void UMenu::OnDestroySession(bool bWasSuccessful)
 
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerDestroySessionCompleteDelegate.RemoveAll(this);
+}
+
+void UMenu::SetButtonsEnabled(bool bIsButtonEnabled)
+{
+    HostButton->SetIsEnabled(bIsButtonEnabled);
+    JoinButton->SetIsEnabled(bIsButtonEnabled);
 }

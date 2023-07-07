@@ -43,7 +43,7 @@ public:
     void CreateSession();
     void FindSessions(int32 MaxSearchResults = 10);
     void JoinSession(const FOnlineSessionSearchResult& SessionResult);
-    void DestroySession(FName SessionName);
+    void DestroySession();
     void StartSession();
 
     /**
@@ -76,6 +76,7 @@ private:
     const FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
     FMultiplayerSessionSettings MultiplayerSessionSettings{};
+    bool bCreateSessionOnDestroy{false};
 
     /**
      * To add to the Online Session Interface delegate list.
