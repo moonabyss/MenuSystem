@@ -106,20 +106,12 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
     }
 }
 
-void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result, const FString& Address)
+void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
     if (!MultiplayerSessionsSubsystem) return;
 
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.RemoveAll(this);
-
-    MultiplayerSessionsSubsystem->MultiplayerStartSessionCompleteDelegate.AddUObject(this, &ThisClass::OnStartSession);
-
-    APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
-    if (PC)
-    {
-        PC->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
-    }
 }
 
 void UMenu::OnStartSession(bool bWasSuccessful)

@@ -32,7 +32,7 @@ protected:
      */
     virtual void OnCreateSession(bool bWasSussessful);
     virtual void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
-    virtual void OnJoinSession(EOnJoinSessionCompleteResult::Type Result, const FString& Address);
+    virtual void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
     virtual void OnStartSession(bool bWasSuccessful);
     virtual void OnDestroySession(bool bWasSuccessful);
 

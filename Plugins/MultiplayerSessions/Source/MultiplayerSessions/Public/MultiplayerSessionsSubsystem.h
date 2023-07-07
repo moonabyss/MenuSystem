@@ -21,7 +21,7 @@ struct FMultiplayerSessionSettings
 // clang-format off
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerCreateSessionCompleteDelegate, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerFindSessionsCompleteDelegate, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMultiplayerJoinSessionCompleteDelegate, EOnJoinSessionCompleteResult::Type Result, const FString& Address);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerJoinSessionCompleteDelegate, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerStartSessionCompleteDelegate, bool bWasSuccessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMultiplayerDestroySessionCompleteDelegate, bool bWasSuccessful);
 // clang-format on
@@ -43,7 +43,7 @@ public:
     void CreateSession();
     void FindSessions(int32 MaxSearchResults = 10);
     void JoinSession(const FOnlineSessionSearchResult& SessionResult);
-    void DestroySession();
+    void DestroySession(FName SessionName);
     void StartSession();
 
     /**
