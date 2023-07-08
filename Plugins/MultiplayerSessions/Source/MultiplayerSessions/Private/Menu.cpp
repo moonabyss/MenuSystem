@@ -2,7 +2,11 @@
 
 #include "Menu.h"
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "OnlineSessionSettings.h"
+
+#include "ServerRow.h"
 
 bool UMenu::Initialize()
 {
@@ -10,9 +14,13 @@ bool UMenu::Initialize()
 
     if (!ensure(HostButton)) return false;
     if (!ensure(JoinButton)) return false;
+    if (!ensure(RefreshButton)) return false;
+
+    ServerList->ClearChildren();
 
     HostButton->OnClicked.AddDynamic(this, &ThisClass::HostButtonClicked);
     JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
+    RefreshButton->OnClicked.AddDynamic(this, &ThisClass::RefreshButtonClicked);
 
     return true;
 }
@@ -35,6 +43,14 @@ void UMenu::MenuSetup(const int32 NumberOfPublicConnections, const FString& Type
     }
 }
 
+void UMenu::SelectIndex(int32 Index)
+{
+    if (Index < 0) return;
+
+    SelectedIndex = Index;
+    UpdateChildren();
+}
+
 void UMenu::HostButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
@@ -46,6 +62,13 @@ void UMenu::HostButtonClicked()
 }
 
 void UMenu::JoinButtonClicked()
+{
+    if (!MultiplayerSessionsSubsystem) return;
+
+    SetButtonsEnabled(false);
+}
+
+void UMenu::RefreshButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
 
@@ -109,10 +132,20 @@ void UMenu::OnFindSessions(const TArray<FServerData>& SearchResults, bool bWasSu
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.RemoveAll(this);
 
+    ServerList->ClearChildren();
+    int32 Index{0};
     for (const auto& Result : SearchResults)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *Result.ServerName));
+        auto Row = CreateWidget<UServerRow>(GetWorld(), ServerRowClass);
+        if (!Row) continue;
+
+        Row->Setup(this, Index++);
+        Row->ServerName->SetText(FText::FromString(Result.ServerName));
+        ServerList->AddChild(Row);
     }
+    SetButtonsEnabled(true);
+
+    return;
 
     // Join session
     MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.AddUObject(this, &ThisClass::OnJoinSession);
@@ -158,5 +191,8 @@ void UMenu::OnDestroySession(bool bWasSuccessful)
 void UMenu::SetButtonsEnabled(bool bIsButtonEnabled)
 {
     HostButton->SetIsEnabled(bIsButtonEnabled);
+    RefreshButton->SetIsEnabled(bIsButtonEnabled);
     JoinButton->SetIsEnabled(bIsButtonEnabled);
 }
+
+void UMenu::UpdateChildren() {}

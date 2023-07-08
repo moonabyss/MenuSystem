@@ -10,6 +10,7 @@
 #include "Menu.generated.h"
 
 class UButton;
+class UVerticalBox;
 class UMultiplayerSessionsSubsystem;
 
 UCLASS()
@@ -23,6 +24,7 @@ public:
         const int32 NumberOfPublicConnections = 4,           //
         const FString& TypeOfMatch = FString("FreeForAll"),  //
         const FString& LobyMapPath = FString("/Game/ThirdPerson/Maps/Lobby"));
+    void SelectIndex(int32 Index);
 
 protected:
     bool Initialize() override;
@@ -44,11 +46,23 @@ private:
     UPROPERTY(meta = (BindWidget))
     UButton* JoinButton;
 
+    UPROPERTY(meta = (BindWidget))
+    UButton* RefreshButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UVerticalBox* ServerList;
+
     UFUNCTION()
     void HostButtonClicked();
 
     UFUNCTION()
     void JoinButtonClicked();
+
+    UFUNCTION()
+    void RefreshButtonClicked();
+
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<UUserWidget> ServerRowClass;
 
     // The subsystem designed to handle all online session functionality
     UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
@@ -56,4 +70,7 @@ private:
     void MenuShow();
     void MenuTeardown();
     void SetButtonsEnabled(bool bIsButtonEnabled);
+    void UpdateChildren();
+
+    int32 SelectedIndex{-1};
 };
