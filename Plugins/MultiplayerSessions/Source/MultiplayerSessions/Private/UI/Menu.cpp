@@ -1,11 +1,11 @@
 // Multiplayer Sessions plugin. All rights reserved
 
-#include "Menu.h"
+#include "UI/Menu.h"
 #include "Components/Button.h"
 #include "Components/VerticalBox.h"
 #include "OnlineSessionSettings.h"
 
-#include "ServerRow.h"
+#include "UI/ServerRow.h"
 
 bool UMenu::Initialize()
 {

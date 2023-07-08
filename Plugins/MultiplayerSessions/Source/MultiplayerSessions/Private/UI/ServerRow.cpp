@@ -1,6 +1,6 @@
 // Multiplayer Sessions plugin. All rights reserved
 
-#include "ServerRow.h"
+#include "UI/ServerRow.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 

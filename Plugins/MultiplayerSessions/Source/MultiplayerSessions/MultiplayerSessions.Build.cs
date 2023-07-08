@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Multiplayer Sessions plugin. All rights reserved
 
 using UnrealBuildTool;
 

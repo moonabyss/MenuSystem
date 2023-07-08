@@ -56,23 +56,22 @@ void UMultiplayerSessionsSubsystem::CreateSession()
     CreateSessionCompleteDelegate_Handle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
     // session settings
-    LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
+    SessionSettings = MakeShareable(new FOnlineSessionSettings());
     const bool IsSubsystemNull = IOnlineSubsystem::Get()->GetSubsystemName() == FName("NULL");
-    LastSessionSettings->bIsLANMatch = IsSubsystemNull;
-    LastSessionSettings->NumPublicConnections = MultiplayerSessionSettings.NumPublicConnections;
-    LastSessionSettings->bAllowJoinInProgress = true;
-    LastSessionSettings->bAllowJoinViaPresence = true;
-    LastSessionSettings->bUsesPresence = true;
-    LastSessionSettings->bShouldAdvertise = true;
-    LastSessionSettings->bUseLobbiesIfAvailable = true;
-    LastSessionSettings->Set(
-        FName("MatchType"), MultiplayerSessionSettings.MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-    LastSessionSettings->Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-    // LastSessionSettings->Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+    SessionSettings->bIsLANMatch = IsSubsystemNull;
+    SessionSettings->NumPublicConnections = MultiplayerSessionSettings.NumPublicConnections;
+    SessionSettings->bAllowJoinInProgress = true;
+    SessionSettings->bAllowJoinViaPresence = true;
+    SessionSettings->bUsesPresence = true;
+    SessionSettings->bShouldAdvertise = true;
+    SessionSettings->bUseLobbiesIfAvailable = true;
+    SessionSettings->Set(FName("MatchType"), MultiplayerSessionSettings.MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+    SessionSettings->Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+    // SessionSettings->Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
     // Try to create session
-    if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, *LastSessionSettings))
+    if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, *SessionSettings))
     {
         // if not successful, remove from stored delegates list
         SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate_Handle);
@@ -97,16 +96,16 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
     // Store the delegate
     FindSessionsCompleteDelegate_Handle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 
-    LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
-    LastSessionSearch->MaxSearchResults = MaxSearchResults;
+    SessionSearch = MakeShareable(new FOnlineSessionSearch());
+    SessionSearch->MaxSearchResults = MaxSearchResults;
     const bool IsSubsystemNull = IOnlineSubsystem::Get()->GetSubsystemName().ToString().ToLower() == FString("null");
-    LastSessionSearch->bIsLanQuery = IsSubsystemNull;
-    LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
-    LastSessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineComparisonOp::Equals);
+    SessionSearch->bIsLanQuery = IsSubsystemNull;
+    SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+    SessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineComparisonOp::Equals);
 
     // try to find sessions
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-    if (!SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))
+    if (!SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef()))
     {
         // if not successful, remove from stored delegates list
         SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
@@ -133,7 +132,7 @@ void UMultiplayerSessionsSubsystem::JoinSession(int32 Index)
 
     // try to join session
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-    if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, LastSessionSearch->SearchResults[Index]))
+    if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), MenuSessionName, SessionSearch->SearchResults[Index]))
     {
         // if not successful, remove from stored delegates list
         SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate_Handle);
@@ -224,7 +223,7 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
     SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
 
     TArray<FServerData> ServerList;
-    for (const auto& SearchResult : LastSessionSearch->SearchResults)
+    for (const auto& SearchResult : SessionSearch->SearchResults)
     {
         FServerData Data;
         FString ServerName;
