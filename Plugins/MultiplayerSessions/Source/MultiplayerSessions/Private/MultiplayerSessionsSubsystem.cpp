@@ -223,32 +223,6 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
     // remove from stored delegates list
     SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
 
-    // Filter results by MatchType
-    /*TArray<FOnlineSessionSearchResult> FilteredResults = LastSessionSearch->SearchResults.FilterByPredicate(
-        [&](const FOnlineSessionSearchResult& Result)
-        {
-            FString MatchType;
-            Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
-            return MatchType == MultiplayerSessionSettings.MatchType;
-        });*/
-
-    /*
-    FServerData Data;
-    Data.MaxPlayers = SearchResult.Session.SessionSettings.NumPublicConnections;
-    Data.CurrentPlayers = Data.MaxPlayers - SearchResult.Session.NumOpenPublicConnections;
-    Data.HostUserName = SearchResult.Session.OwningUserName;
-    FString ServerName;
-    if (SearchResult.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, ServerName) && !ServerName.Equals(""))
-    {
-        Data.Name = ServerName;
-    }
-    else
-    {
-        Data.Name = SearchResult.GetSessionIdStr();
-    }
-    ServerNames.Add(Data);
-    */
-
     TArray<FServerData> ServerList;
     for (const auto& SearchResult : LastSessionSearch->SearchResults)
     {
@@ -261,7 +235,6 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
         else
         {
             Data.ServerName = SearchResult.Session.OwningUserName;
-            // Data.ServerName = SearchResult.GetSessionIdStr();
         }
         ServerList.Add(Data);
     }

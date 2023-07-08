@@ -2,12 +2,12 @@
 
 #include "ServerRow.h"
 #include "Components/Button.h"
-#include "Menu.h"
+#include "Components/TextBlock.h"
 
-void UServerRow::Setup(UMenu* InParent, int32 InIndex)
+void UServerRow::Setup(int32 InIndex, const FString& ServerNameText)
 {
-    Parent = InParent;
     Index = InIndex;
+    ServerName->SetText(FText::FromString(ServerNameText));
     RowButton->OnClicked.AddDynamic(this, &ThisClass::OnClicked);
 }
 
@@ -23,5 +23,5 @@ int32 UServerRow::GetIndex()
 
 void UServerRow::OnClicked()
 {
-    Parent->SelectIndex(Index);
+    ServerSelectedDelegate.Broadcast(Index);
 }

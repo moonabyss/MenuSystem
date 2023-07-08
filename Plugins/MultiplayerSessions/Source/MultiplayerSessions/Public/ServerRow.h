@@ -7,9 +7,10 @@
 
 #include "ServerRow.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnServerSelectedDelegate, int32 Index);
+
 class UButton;
 class UTextBlock;
-class UMenu;
 
 UCLASS()
 class MULTIPLAYERSESSIONS_API UServerRow : public UUserWidget
@@ -17,25 +18,21 @@ class MULTIPLAYERSESSIONS_API UServerRow : public UUserWidget
     GENERATED_BODY()
 
 public:
-    UPROPERTY(meta = (BindWidget))
-    UTextBlock* ServerName;
-
-    UPROPERTY(BlueprintReadOnly)
-    bool Selected{false};
-
-    void Setup(UMenu* InParent, int32 InIndex);
+    void Setup(int32 InIndex, const FString& ServerNameText);
     void SetHighlightVisible(bool bIsVisible);
     int32 GetIndex();
+
+    FOnServerSelectedDelegate ServerSelectedDelegate;
 
 private:
     UFUNCTION()
     void OnClicked();
 
-    UPROPERTY()
-    UMenu* Parent;
-
     UPROPERTY(meta = (BindWidget))
     UButton* RowButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* ServerName;
 
     int32 Index;
 };

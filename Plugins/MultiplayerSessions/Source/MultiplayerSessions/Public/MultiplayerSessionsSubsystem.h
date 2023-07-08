@@ -75,8 +75,8 @@ protected:
 
 private:
     IOnlineSessionPtr SessionInterface;
-    TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
-    TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
+    TSharedPtr<FOnlineSessionSettings> SessionSettings;
+    TSharedPtr<FOnlineSessionSearch> SessionSearch;
 
     const FName MenuSessionName = FName("MoonabyssGameSession");
     const FString SearchServerKeyword = FString("MoonabyssGame");

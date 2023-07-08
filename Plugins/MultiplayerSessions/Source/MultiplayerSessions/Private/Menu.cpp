@@ -2,7 +2,6 @@
 
 #include "Menu.h"
 #include "Components/Button.h"
-#include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "OnlineSessionSettings.h"
 
@@ -49,7 +48,6 @@ void UMenu::SelectIndex(int32 Index)
 
     SelectedIndex = Index;
     UpdateChildren();
-    GEngine->AddOnScreenDebugMessage(0, 10.0f, FColor::Yellow, FString::Printf(TEXT("%d"), Index));
 }
 
 void UMenu::HostButtonClicked()
@@ -66,7 +64,6 @@ void UMenu::JoinButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
 
-    // Join session
     if (SelectedIndex >= 0)
     {
         SetButtonsEnabled(false);
@@ -138,26 +135,9 @@ void UMenu::OnFindSessions(const TArray<FServerData>& SearchResults, bool bWasSu
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.RemoveAll(this);
 
-    if (SearchResults.Num() > 0)
-    {
-        SelectedIndex = 0;
-    }
-    ServerList->ClearChildren();
-    int32 Index{0};
-    for (const auto& Result : SearchResults)
-    {
-        auto Row = CreateWidget<UServerRow>(GetWorld(), ServerRowClass);
-        if (!Row) continue;
-
-        Row->Setup(this, Index);
-        Row->ServerName->SetText(FText::FromString(Result.ServerName));
-        Row->SetHighlightVisible(SelectedIndex == Index);
-        ServerList->AddChild(Row);
-        Index++;
-    }
+    SelectedIndex = SearchResults.Num() > 0 ? 0 : -1;
+    FillServerList(SearchResults);
     SetButtonsEnabled(true);
-
-    return;
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -202,5 +182,22 @@ void UMenu::UpdateChildren()
     {
         const auto& Row = Cast<UServerRow>(Child);
         Row->SetHighlightVisible(SelectedIndex == Row->GetIndex());
+    }
+}
+
+void UMenu::FillServerList(const TArray<FServerData>& SearchResults)
+{
+    ServerList->ClearChildren();
+    int32 Index{0};
+    for (const auto& Result : SearchResults)
+    {
+        auto Row = CreateWidget<UServerRow>(GetWorld(), ServerRowClass);
+        if (!Row) continue;
+
+        Row->Setup(Index, Result.ServerName);
+        Row->SetHighlightVisible(SelectedIndex == Index);
+        Row->ServerSelectedDelegate.AddUObject(this, &ThisClass::SelectIndex);
+        ServerList->AddChild(Row);
+        Index++;
     }
 }

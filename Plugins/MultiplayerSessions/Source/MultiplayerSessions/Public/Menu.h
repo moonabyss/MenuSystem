@@ -20,10 +20,10 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 
 public:
     UFUNCTION(BlueprintCallable)
-    void MenuSetup(                                          //
-        const int32 NumberOfPublicConnections = 4,           //
-        const FString& TypeOfMatch = FString("FreeForAll"),  //
-        const FString& LobyMapPath = FString("/Game/ThirdPerson/Maps/Lobby"));
+    void MenuSetup(                                                             //
+        const int32 NumberOfPublicConnections = 4,                              //
+        const FString& TypeOfMatch = FString("FreeForAll"),                     //
+        const FString& LobyMapPath = FString("/Game/ThirdPerson/Maps/Lobby"));  //
     void SelectIndex(int32 Index);
 
 protected:
@@ -71,6 +71,7 @@ private:
     void MenuTeardown();
     void SetButtonsEnabled(bool bIsButtonEnabled);
     void UpdateChildren();
+    void FillServerList(const TArray<FServerData>& SearchResults);
 
     int32 SelectedIndex{-1};
 };
