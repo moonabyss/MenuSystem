@@ -99,11 +99,10 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 
     LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
     LastSessionSearch->MaxSearchResults = MaxSearchResults;
-    const bool IsSubsystemNull = IOnlineSubsystem::Get()->GetSubsystemName() == FName("NULL");
+    const bool IsSubsystemNull = IOnlineSubsystem::Get()->GetSubsystemName().ToString().ToLower() == FString("null");
     LastSessionSearch->bIsLanQuery = IsSubsystemNull;
     LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
     LastSessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, SearchServerKeyword, EOnlineComparisonOp::Equals);
-    // TODO: Set server name
 
     // try to find sessions
     const auto LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -261,7 +260,8 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
         }
         else
         {
-            Data.ServerName = SearchResult.GetSessionIdStr();
+            Data.ServerName = SearchResult.Session.OwningUserName;
+            // Data.ServerName = SearchResult.GetSessionIdStr();
         }
         ServerList.Add(Data);
     }

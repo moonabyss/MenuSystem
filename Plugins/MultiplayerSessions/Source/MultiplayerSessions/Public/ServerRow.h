@@ -24,6 +24,8 @@ public:
     bool Selected{false};
 
     void Setup(UMenu* InParent, int32 InIndex);
+    void SetHighlightVisible(bool bIsVisible);
+    int32 GetIndex();
 
 private:
     UFUNCTION()

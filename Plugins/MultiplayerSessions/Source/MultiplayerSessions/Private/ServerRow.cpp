@@ -11,6 +11,16 @@ void UServerRow::Setup(UMenu* InParent, int32 InIndex)
     RowButton->OnClicked.AddDynamic(this, &ThisClass::OnClicked);
 }
 
+void UServerRow::SetHighlightVisible(bool bIsVisible)
+{
+    RowButton->SetRenderOpacity(bIsVisible ? 1 : 0);
+}
+
+int32 UServerRow::GetIndex()
+{
+    return Index;
+}
+
 void UServerRow::OnClicked()
 {
     Parent->SelectIndex(Index);

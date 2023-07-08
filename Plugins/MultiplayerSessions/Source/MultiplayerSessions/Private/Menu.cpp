@@ -49,6 +49,7 @@ void UMenu::SelectIndex(int32 Index)
 
     SelectedIndex = Index;
     UpdateChildren();
+    GEngine->AddOnScreenDebugMessage(0, 10.0f, FColor::Yellow, FString::Printf(TEXT("%d"), Index));
 }
 
 void UMenu::HostButtonClicked()
@@ -65,7 +66,12 @@ void UMenu::JoinButtonClicked()
 {
     if (!MultiplayerSessionsSubsystem) return;
 
-    SetButtonsEnabled(false);
+    // Join session
+    if (SelectedIndex >= 0)
+    {
+        SetButtonsEnabled(false);
+        MultiplayerSessionsSubsystem->JoinSession(SelectedIndex);
+    }
 }
 
 void UMenu::RefreshButtonClicked()
@@ -132,6 +138,10 @@ void UMenu::OnFindSessions(const TArray<FServerData>& SearchResults, bool bWasSu
     // Clear bindings
     MultiplayerSessionsSubsystem->MultiplayerFindSessionsCompleteDelegate.RemoveAll(this);
 
+    if (SearchResults.Num() > 0)
+    {
+        SelectedIndex = 0;
+    }
     ServerList->ClearChildren();
     int32 Index{0};
     for (const auto& Result : SearchResults)
@@ -139,24 +149,15 @@ void UMenu::OnFindSessions(const TArray<FServerData>& SearchResults, bool bWasSu
         auto Row = CreateWidget<UServerRow>(GetWorld(), ServerRowClass);
         if (!Row) continue;
 
-        Row->Setup(this, Index++);
+        Row->Setup(this, Index);
         Row->ServerName->SetText(FText::FromString(Result.ServerName));
+        Row->SetHighlightVisible(SelectedIndex == Index);
         ServerList->AddChild(Row);
+        Index++;
     }
     SetButtonsEnabled(true);
 
     return;
-
-    // Join session
-    MultiplayerSessionsSubsystem->MultiplayerJoinSessionCompleteDelegate.AddUObject(this, &ThisClass::OnJoinSession);
-    if (bWasSuccessful && SearchResults.Num() == 1)
-    {
-        MultiplayerSessionsSubsystem->JoinSession(0);
-    }
-    else
-    {
-        SetButtonsEnabled(true);
-    }
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -195,4 +196,11 @@ void UMenu::SetButtonsEnabled(bool bIsButtonEnabled)
     JoinButton->SetIsEnabled(bIsButtonEnabled);
 }
 
-void UMenu::UpdateChildren() {}
+void UMenu::UpdateChildren()
+{
+    for (const auto& Child : ServerList->GetAllChildren())
+    {
+        const auto& Row = Cast<UServerRow>(Child);
+        Row->SetHighlightVisible(SelectedIndex == Row->GetIndex());
+    }
+}
